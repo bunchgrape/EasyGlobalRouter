@@ -1,0 +1,11 @@
+
+# Pre
+build/
+bin/
+output/
+results/
+verifier/
+testcase/
+
+# vscode
+.vscode/
