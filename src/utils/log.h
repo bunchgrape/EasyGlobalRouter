@@ -72,6 +72,7 @@ void printflog(T... t) {
 
 class logger {
 public:
+    logger();
     logger(const std::string& file_dir, const std::string& file_name);
     ~logger();
     std::ofstream& info(std::ostream& os = std::cout);

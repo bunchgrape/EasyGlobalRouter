@@ -6,7 +6,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Message
-message(STATUS "CENG 5270 hw2")
+message(STATUS "CENG 5270 hw3")
 message(STATUS ${CMAKE_CURRENT_SOURCE_DIR})
 message(STATUS ${PROJECT_SOURCE_DIR})
 
@@ -14,16 +14,16 @@ message(STATUS ${PROJECT_SOURCE_DIR})
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Project's name
-project(hw2)
+project(hw3)
 
 # Set the output folder where your program will be created
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 set(PATH_SRC ${PROJECT_SOURCE_DIR}/src/)
 
@@ -53,7 +53,7 @@ file(GLOB_RECURSE SRC_FILES
 # Targets #
 ###########
 
-add_executable(hw2 ${SRC_FILES})
+add_executable(hw3 ${SRC_FILES})
 
 #######################
 # Include Directories #
@@ -66,8 +66,8 @@ include_directories(${PATH_SRC})
 #################
 
 # TODO: set static under release mode only
-set_target_properties(hw2 PROPERTIES LINK_FLAGS "-static -Wl,--whole-archive -rdynamic -lpthread -Wl,--no-whole-archive")
+set_target_properties(hw3 PROPERTIES LINK_FLAGS "-static -Wl,--whole-archive -rdynamic -lpthread -Wl,--no-whole-archive")
 
 # Boost
-target_include_directories(hw2 PUBLIC ${Boost_INCLUDE_DIR})
-target_link_libraries(hw2 ${Boost_LIBRARIES})
+target_include_directories(hw3 PUBLIC ${Boost_INCLUDE_DIR})
+target_link_libraries(hw3 ${Boost_LIBRARIES})

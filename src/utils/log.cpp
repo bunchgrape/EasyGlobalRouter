@@ -67,6 +67,10 @@ std::ostream& log(std::ostream& os) {
     return os;
 }
 
+logger::logger(){
+    std::time_t rawtime;
+}
+
 logger::logger(const std::string& file_dir, const std::string& file_name){
     std::time_t rawtime;
     std::tm* timeinfo;
@@ -76,7 +80,6 @@ logger::logger(const std::string& file_dir, const std::string& file_name){
     timeinfo = std::localtime(&rawtime);
     std::strftime(buffer,80,"%Y_%m%d_%H%M%S",timeinfo);
     std::string stamp(buffer);
-
     std::string file_path_stamp = file_dir + stamp + "_" + file_name;
     fout = std::ofstream(file_path_stamp);
 }

@@ -1,8 +1,7 @@
 
-
-#include "global.h"
 #include <sys/stat.h>
-#include <iostream>
+#include "global.h"
+#include "db/Database.h"
 
 void signalHandler(int signum) {
     std::cout << "Signal (" << signum << ") received. Exiting...\n";
@@ -19,30 +18,33 @@ int main(int argc, char* argv[]) {
     
     log() << "-----------start-------------" << std::endl;
 
+    //-------------------------- input ---------------------------
+    string netFile      = string(argv[1]);
+    string output_path      = string(argv[2]);
 
+    std::string preprefix = netFile.substr(0,netFile.find_last_of('.'));
+    std::string prefix = preprefix.substr(0,preprefix.find_last_of('.'));
+    std::string design = prefix.substr(prefix.find_last_of('/')+1);
+
+    utils::timer runtime;
+
+    //------------------------ setup log file --------------------- 
     const std::string& result = "results";
     const std::string& result_dir = "../" + result + "/";
-    
-    log() << result_dir << endl;
 
     struct stat sb;
-    struct stat buf;
     stat(result_dir.c_str(), &sb);
-
-    log() << S_ISDIR(sb.st_mode) << endl;
-
     if (!S_ISDIR(sb.st_mode)) {
         mkdir(result_dir.c_str(), 0777);
     }
-
-    utils::logger logger(result_dir, "test");
-
     
-    logger.info() << "test" << "test2\n";
+    utils::logger logger(result_dir, design);
 
-    logger.info() << "test3" << "test4\n";
-
+    //-------------------------- load -----------------------------
+    db::Database database;
+    database.logger = &logger;
+    database.designName = design;
+    database.read(netFile);
     
-
     return 0;
 }
