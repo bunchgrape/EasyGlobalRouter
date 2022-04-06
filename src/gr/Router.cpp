@@ -68,7 +68,9 @@ Router::Router(db::Database* database_) :
     // // cout << accumulate(a.begin()+0,a.begin()+3,0) << endl;
     // a[2]+=1;
     // cout<<a[2]<<endl;
-}
+} //END MODULE
+
+//---------------------------------------------------------------------
 
 bool Router::single_net_pattern(db::Net* net){
     int x_1 = net->Pins[0]->pos_x;
@@ -160,7 +162,7 @@ bool Router::single_net_pattern(db::Net* net){
             gcell->demandV += 1;
             gcell->netsY.push_back(idx);
         }
-        for (int j = solution; j != x_h; j++){
+        for (int j = solution; j != y_h; j++){
             demV[x_s_2][j] += 1;
             db::GCell* gcell = gcells[x_s_2][j];
             rpaths[idx].path.push_back(gcell);
@@ -170,4 +172,26 @@ bool Router::single_net_pattern(db::Net* net){
     }
 
     return true;
-}
+} //END MODULE
+
+//---------------------------------------------------------------------
+
+void Router::print_demand(){
+    for(int j = 0; j < gridY; j++){
+        for(int i = 0; i < gridX; i++){
+            logger->info() << demV[i][j];
+        }
+        logger->info() << endl;
+    }
+    logger->info() << endl;
+    logger->info() << endl;
+    logger->info() << endl;
+    for(int j = 0; j < gridY; j++){
+        for(int i = 0; i < gridX; i++){
+            logger->info() << demH[j][i];
+        }
+        logger->info() << endl;
+    }
+} //END MODULE
+
+//---------------------------------------------------------------------

@@ -25,6 +25,7 @@ public:
     utils::logger* logger;
 
     bool single_net_pattern(db::Net* net);
+    void print_demand();
     void run();
     void ripup(const vector<int>& netsToRoute);
 };
