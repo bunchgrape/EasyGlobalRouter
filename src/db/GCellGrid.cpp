@@ -7,7 +7,7 @@ void GRGrid::init(const int x, const int y, const int hcap, const int vcap){
     ny = y;
     Hcap = hcap;
     Vcap = vcap;
-    gcells.resize(nx, vector<GCell>(ny));
+    gcells.resize(nx, vector<GCell>(ny)); // |G| + 1 = |E|
     // log() << gcells.size() << endl;
     // log() << gcells[0].size() << endl;
 

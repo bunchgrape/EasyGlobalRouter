@@ -379,21 +379,6 @@ bool Database::read(const std::string& netFile) {
 
     grGrid.init(bsData.nGridX, bsData.nGridY, bsData.Hcap, bsData.Vcap);
 
-    // for (Net* net : this->nets) {
-    //     logger->info() << net->name() << endl;
-    //     logger->info() << net->Pins[0]->pos_x << " " << net->Pins[0]->pos_y<< endl;
-    //     logger->info() << net->Pins[1]->pos_x << " " << net->Pins[1]->pos_y<< endl;
-    // }
-
-    // for(int i = 0; i < bsData.nGridX; i++){
-    //     for(int j = 0; j < bsData.nGridY; j++){
-    //         logger->info() << grGrid.gcells[i][j].X_cor;
-    //         logger->info() << grGrid.gcells[i][j].Y_cor;
-    //         logger->info() << grGrid.gcells[i][j].supplyH;
-    //         logger->info() << grGrid.gcells[i][j].supplyV << endl;
-    //     }
-    // }
-
     return true;
 } //END MODULE
 

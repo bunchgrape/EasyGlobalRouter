@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include "global.h"
 #include "db/Database.h"
+#include "gr/Router.h"
 
 void signalHandler(int signum) {
     std::cout << "Signal (" << signum << ") received. Exiting...\n";
@@ -40,11 +41,14 @@ int main(int argc, char* argv[]) {
     
     utils::logger logger(result_dir, design);
 
-    //-------------------------- load -----------------------------
+    //-------------------------- read -----------------------------
     db::Database database;
     database.logger = &logger;
     database.designName = design;
     database.read(netFile);
-    
+
+    //-------------------------- load -----------------------------
+    gr::Router router(&database);
+
     return 0;
 }

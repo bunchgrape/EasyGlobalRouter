@@ -12,8 +12,8 @@ public:
     int supplyV = 0;
     int demandH = 0;
     int demandV = 0;
-    // vector<Net*> netsX;
-    // vector<Net*> netsY;
+    vector<Net*> netsX;
+    vector<Net*> netsY;
 };
 
 class GRGrid {
