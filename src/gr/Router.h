@@ -19,6 +19,7 @@ public:
 
     vector<db::Net*> net_queue;
     vector<Rpath> rpaths;
+    vector<vector<db::Point>> rpoints;
 
 public:
     Router(db::Database* database_);
@@ -27,6 +28,7 @@ public:
     bool single_net_pattern(db::Net* net);
     void print_demand();
     void run();
+    void write(const string& output_path);
     void ripup(const vector<int>& netsToRoute);
 };
 

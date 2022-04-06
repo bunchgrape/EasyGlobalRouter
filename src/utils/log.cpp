@@ -89,7 +89,7 @@ logger::~logger(){
 }
 
 std::ofstream& logger::info(std::ostream& os) {
-    fout << tstamp;
+    // fout << tstamp;
     return fout;
 }
 

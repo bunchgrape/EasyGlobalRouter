@@ -50,5 +50,15 @@ int main(int argc, char* argv[]) {
     //-------------------------- load -----------------------------
     gr::Router router(&database);
 
+    // db::Net* net = router.net_queue[189];
+
+    // router.single_net_pattern(net);
+
+    for(db::Net* net : router.net_queue) {
+        router.single_net_pattern(net);
+    }
+    router.print_demand();
+    router.write(output_path);
+
     return 0;
 }

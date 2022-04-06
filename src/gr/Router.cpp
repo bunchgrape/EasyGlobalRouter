@@ -37,6 +37,7 @@ Router::Router(db::Database* database_) :
 
     // Route paths | net-wise
     rpaths.resize(database->nNets);
+    rpoints.resize(database->nNets);
 
 
 
@@ -171,6 +172,19 @@ bool Router::single_net_pattern(db::Net* net){
         }
     }
 
+    // Writer format
+    if (direction == true){
+        rpoints[idx].push_back(db::Point(x_l, y_s_1));
+        rpoints[idx].push_back(db::Point(solution, y_s_1));
+        rpoints[idx].push_back(db::Point(solution, y_s_2));
+        rpoints[idx].push_back(db::Point(x_h, y_s_2));
+    } else{
+        rpoints[idx].push_back(db::Point(x_s_1, y_l));
+        rpoints[idx].push_back(db::Point(x_s_1, solution));
+        rpoints[idx].push_back(db::Point(x_s_2, solution));
+        rpoints[idx].push_back(db::Point(x_s_2, y_h));
+    }
+
     return true;
 } //END MODULE
 
@@ -179,7 +193,7 @@ bool Router::single_net_pattern(db::Net* net){
 void Router::print_demand(){
     for(int j = 0; j < gridY; j++){
         for(int i = 0; i < gridX; i++){
-            logger->info() << demV[i][j];
+            logger->info() << demV[i][j] << "  ";
         }
         logger->info() << endl;
     }
@@ -188,10 +202,31 @@ void Router::print_demand(){
     logger->info() << endl;
     for(int j = 0; j < gridY; j++){
         for(int i = 0; i < gridX; i++){
-            logger->info() << demH[j][i];
+            logger->info() << demH[j][i] << "  ";
         }
         logger->info() << endl;
     }
+} //END MODULE
+
+//---------------------------------------------------------------------
+
+void Router::write(const string& output_path) {
+    ofstream outfile;
+    outfile.open(output_path, ios::out);
+    
+    for(int idx = 0; idx < database->nNets; idx++){
+        outfile << database->nets[idx]->name() << ' ' 
+                    << idx << "\n";
+        for(int j = 0; j < rpoints[idx].size() - 1; j++){
+            outfile << '(' << rpoints[idx][j].x_ << ", "
+                            << rpoints[idx][j].y_ << ", 1)-("
+                            << rpoints[idx][j+1].x_ << ", "
+                            << rpoints[idx][j+1].y_ << ", 1)\n";
+        }
+        outfile << "!\n";
+    }
+
+    outfile.close();
 } //END MODULE
 
 //---------------------------------------------------------------------

@@ -2,6 +2,14 @@
 
 namespace db {
 
+struct Point {
+    Point() {}
+    Point(int x, int y)
+        : x_(x), y_(y) {}
+    int x_ = 0;
+    int y_ = 0;
+};
+
 class GCell {
 public:
     GCell() {}
