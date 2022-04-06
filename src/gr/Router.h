@@ -24,7 +24,7 @@ public:
     Router(db::Database* database_);
     utils::logger* logger;
 
-    bool single_net(db::Net* net);
+    bool single_net_pattern(db::Net* net);
     void run();
     void ripup(const vector<int>& netsToRoute);
 };
