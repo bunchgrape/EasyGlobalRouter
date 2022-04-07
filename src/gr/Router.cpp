@@ -32,57 +32,36 @@ Router::Router(db::Database* database_) :
 
     // Demand map | two directions
     // TODO: 
-    demH.resize(gridY, vector<int>(gridX));     // X * Y
-    demV.resize(gridX, vector<int>(gridY));     // Y * X
+    demH.resize(gridY, vector<int>(gridX));     // [Y][X]
+    demV.resize(gridX, vector<int>(gridY));     // [X][Y]
 
     // Route paths | net-wise
     rpaths.resize(database->nNets);
     rpoints.resize(database->nNets);
 
-
-
     // for(int i = 0; i < grGrid.nx; i++){
     //     for(int j = 0; j <  grGrid.ny; j++){
-    //         database->logger->info() << grGrid.gcells[i][j].X_cor;
-    //         database->logger->info() << grGrid.gcells[i][j].Y_cor;
-    //         database->logger->info() << grGrid.gcells[i][j].supplyH;
-    //         database->logger->info() << grGrid.gcells[i][j].supplyV << endl;
+    //        logger->info() << grGrid.gcells[i][j].X_cor;
+    //        logger->info() << grGrid.gcells[i][j].Y_cor;
+    //        logger->info() << grGrid.gcells[i][j].supplyH;
+    //        logger->info() << grGrid.gcells[i][j].supplyV << endl;
     //     }
     // }
 
-    // database->logger->info() << gridX << endl;
-    // database->logger->info() << gridY << endl;
-    // database->logger->info() << capH << endl;
-    // database->logger->info() << capV << endl;
-
-    // for(int i = 0; i < grGrid.nx; i++){
-    //     for(int j = 0; j <  grGrid.ny; j++){
-    //         cout << demH[i][j];
-    //     }
-    //     cout << endl;
-    // }
-
-    // sum_of_elems = std::accumulate(vector.begin(), vector.end(),
-    //                                 decltype(vector)::value_type(0));
-    // cout << "---------------------------------\n";
-    // vector<int> a = {1,2,3,4};
-    // // cout << accumulate(a.begin()+0,a.begin()+3,0) << endl;
-    // a[2]+=1;
-    // cout<<a[2]<<endl;
+    //logger->info() << gridX << endl;
+    //logger->info() << gridY << endl;
+    //logger->info() << capH << endl;
+    //logger->info() << capV << endl;
 } //END MODULE
 
 //---------------------------------------------------------------------
 
 bool Router::single_net_pattern(db::Net* net){
-    int x_1 = net->Pins[0]->pos_x;
-    int y_1 = net->Pins[0]->pos_y;
-    int x_2 = net->Pins[1]->pos_x;
-    int y_2 = net->Pins[1]->pos_y;
+    int x_1 = net->Pins[0]->pos_x;int y_1 = net->Pins[0]->pos_y;
+    int x_2 = net->Pins[1]->pos_x;int y_2 = net->Pins[1]->pos_y;
 
-    int x_l = min(x_1, x_2);
-    int y_l = min(y_1, y_2);
-    int x_h = max(x_1, x_2);
-    int y_h = max(y_1, y_2);
+    int x_l = min(x_1, x_2);int y_l = min(y_1, y_2);
+    int x_h = max(x_1, x_2);int y_h = max(y_1, y_2);
 
     int x_s_1; int x_s_2;
     int y_s_1; int y_s_2;
@@ -97,8 +76,9 @@ bool Router::single_net_pattern(db::Net* net){
     int min_cost = INT_MAX;
     int cost;
     bool direction;     // true vertival | false horizontal
-    int solution;
-    // vertical line
+    int bend;       // Bending point
+
+    // Vertical line
     for (int i = x_l; i <= x_h; i++){
         cost = 0;
         cost += accumulate(demH[y_s_1].begin() + x_l, demH[y_s_1].begin() + i, 0);
@@ -107,11 +87,11 @@ bool Router::single_net_pattern(db::Net* net){
         if (cost < min_cost){
             min_cost = cost;
             direction = true;
-            solution = i;
+            bend = i;
         }
     }
     
-    // horizontal line
+    // Horizontal line
     for (int j = y_l; j <= y_h; j++){
         cost = 0;
         cost += accumulate(demV[x_s_1].begin() + y_l, demV[x_s_1].begin() + j, 0);
@@ -120,71 +100,126 @@ bool Router::single_net_pattern(db::Net* net){
         if (cost < min_cost){
             min_cost = cost;
             direction = false;
-            solution = j;
+            bend = j;
         }
     }
 
-    // update demand matrix | update route path
+    // Update demand matrix | Update route path
     int idx = net->id();
     if (direction == true){
-        for (int i = x_l; i != solution; i++){
+        for (int i = x_l; i != bend; i++){
             demH[y_s_1][i] += 1;
             db::GCell* gcell = gcells[i][y_s_1];
             rpaths[idx].path.push_back(gcell);
+            rpaths[idx].direction.push_back(false);       // true vertival | false horizontal
             gcell->demandH += 1;
-            gcell->netsX.push_back(idx);
+            gcell->netsX.push_back(idx);                  // X = H | Y = V
         }
         for (int j = y_l; j != y_h; j++){
-            demV[solution][j] += 1;
-            db::GCell* gcell = gcells[solution][j];
+            demV[bend][j] += 1;
+            db::GCell* gcell = gcells[bend][j];
             rpaths[idx].path.push_back(gcell);
+            rpaths[idx].direction.push_back(true);
             gcell->demandV += 1;
             gcell->netsY.push_back(idx);
         }
-        for (int i = solution; i != x_h; i++){
+        for (int i = bend; i != x_h; i++){
             demH[y_s_2][i] += 1;
             db::GCell* gcell = gcells[i][y_s_2];
             rpaths[idx].path.push_back(gcell);
+            rpaths[idx].direction.push_back(false);
             gcell->demandH += 1;
             gcell->netsX.push_back(idx);
         }
     } else{
-        for (int j = y_l; j != solution; j++){
+        for (int j = y_l; j != bend; j++){
             demV[x_s_1][j] += 1;
             db::GCell* gcell = gcells[x_s_1][j];
             rpaths[idx].path.push_back(gcell);
-            gcell->demandV += 1;
-            gcell->netsX.push_back(idx);
-        }
-        for (int i = x_l; i != x_h; i++){
-            demH[solution][i] += 1;
-            db::GCell* gcell = gcells[i][solution];
-            rpaths[idx].path.push_back(gcell);
+            rpaths[idx].direction.push_back(true);
             gcell->demandV += 1;
             gcell->netsY.push_back(idx);
         }
-        for (int j = solution; j != y_h; j++){
+        for (int i = x_l; i != x_h; i++){
+            demH[bend][i] += 1;
+            db::GCell* gcell = gcells[i][bend];
+            rpaths[idx].path.push_back(gcell);
+            rpaths[idx].direction.push_back(false);
+            gcell->demandH += 1;
+            gcell->netsX.push_back(idx);
+        }
+        for (int j = bend; j != y_h; j++){
             demV[x_s_2][j] += 1;
             db::GCell* gcell = gcells[x_s_2][j];
             rpaths[idx].path.push_back(gcell);
-            gcell->demandH += 1;
-            gcell->netsX.push_back(idx);
+            rpaths[idx].direction.push_back(true);
+            gcell->demandV += 1;
+            gcell->netsY.push_back(idx);
         }
     }
 
     // Writer format
     if (direction == true){
         rpoints[idx].push_back(db::Point(x_l, y_s_1));
-        rpoints[idx].push_back(db::Point(solution, y_s_1));
-        rpoints[idx].push_back(db::Point(solution, y_s_2));
+        rpoints[idx].push_back(db::Point(bend, y_s_1));
+        rpoints[idx].push_back(db::Point(bend, y_s_2));
         rpoints[idx].push_back(db::Point(x_h, y_s_2));
     } else{
         rpoints[idx].push_back(db::Point(x_s_1, y_l));
-        rpoints[idx].push_back(db::Point(x_s_1, solution));
-        rpoints[idx].push_back(db::Point(x_s_2, solution));
+        rpoints[idx].push_back(db::Point(x_s_1, bend));
+        rpoints[idx].push_back(db::Point(x_s_2, bend));
         rpoints[idx].push_back(db::Point(x_s_2, y_h));
     }
 
+    // Update queues
+    net_rflag[idx] = true;
+    net_queue.clear();
+
+    return true;
+} //END MODULE
+
+//---------------------------------------------------------------------
+
+bool Router::unroute_net(db::Net* net){
+    int idx = net->id();
+    net_rflag[idx] = false;
+
+    for (int i = 0; i != rpaths[idx].direction.size(); i++){
+        bool direction = rpaths[idx].direction[i];
+        db::GCell* gcell = rpaths[idx].path[i];
+        if(direction){
+            demV[gcell->X_cor][gcell->Y_cor] -= 1;
+            gcell->demandV -= 1;
+            vector<int>::iterator pos = find(gcell->netsY.begin(), gcell->netsY.end(), idx);
+            if (pos != gcell->netsY.end()) // == myVector.end() means the element was not found
+                gcell->netsY.erase(pos);
+            else{
+                logger->info() << "Error! Path not found!\n";
+                exit(1);
+            }
+        } else{
+            demH[gcell->Y_cor][gcell->X_cor] -= 1;
+            gcell->demandH -= 1;
+            vector<int>::iterator pos = find(gcell->netsX.begin(), gcell->netsX.end(), idx);
+            if (pos != gcell->netsX.end()) // == myVector.end() means the element was not found
+                gcell->netsX.erase(pos);
+            else{
+                logger->info() << "Error! Path not found!\n";
+                exit(1);
+            }
+        }
+    }
+
+    rpaths[idx].clear();
+    rpoints[idx].clear();
+    
+    return true;
+} //END MODULE
+
+//---------------------------------------------------------------------
+
+bool Router::single_net_maze(db::Net* net){
+    
     return true;
 } //END MODULE
 
@@ -193,19 +228,22 @@ bool Router::single_net_pattern(db::Net* net){
 void Router::print_demand(){
     for(int j = 0; j < gridY; j++){
         for(int i = 0; i < gridX; i++){
-            logger->info() << demV[i][j] << "  ";
+            logger->info() << setw(3) << demV[i][j];
         }
         logger->info() << endl;
     }
-    logger->info() << endl;
     logger->info() << endl;
     logger->info() << endl;
     for(int j = 0; j < gridY; j++){
         for(int i = 0; i < gridX; i++){
-            logger->info() << demH[j][i] << "  ";
+            logger->info() << setw(3) << demH[j][i];
         }
         logger->info() << endl;
     }
+    logger->info() << endl;
+    logger->info() << endl;
+    logger->info() << endl;
+    logger->info() << endl;
 } //END MODULE
 
 //---------------------------------------------------------------------
@@ -225,8 +263,8 @@ void Router::write(const string& output_path) {
         }
         outfile << "!\n";
     }
-
     outfile.close();
 } //END MODULE
 
 //---------------------------------------------------------------------
+

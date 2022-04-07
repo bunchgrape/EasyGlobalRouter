@@ -80,7 +80,7 @@ logger::logger(const std::string& file_dir, const std::string& file_name){
     timeinfo = std::localtime(&rawtime);
     std::strftime(buffer,80,"%Y_%m%d_%H%M%S",timeinfo);
     std::string stamp(buffer);
-    std::string file_path_stamp = file_dir + stamp + "_" + file_name;
+    std::string file_path_stamp = file_dir + stamp + "_" + file_name + ".log";
     fout = std::ofstream(file_path_stamp);
 }
 

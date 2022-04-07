@@ -6,8 +6,8 @@ namespace gr {
 class Rpath {
 public:
     vector<db::GCell*> path;
-
-public:
+    vector<bool> direction;
+    void clear() {path.clear();direction.clear();}
 };
 
 }
