@@ -50,26 +50,31 @@ int main(int argc, char* argv[]) {
     //-------------------------- load -----------------------------
     gr::Router router(&database);
 
-    // vector<int> a = {1,2,3,4};
-    // vector<int>::iterator pos = find(a.begin(),a.end(),1);
-    // cout << a.at(pos) << endl;
-    // exit(1);
-
-    db::Net* net = router.net_queue[1];
-
+    // db::Net* net = router.net_queue[1];
     // router.single_net_pattern(net);
 
-    for(db::Net* net : router.net_queue) {
-        router.single_net_pattern(net);
-    }
-    router.print_demand();
-    // router.write(output_path);
-    // router.unroute_net(net);
-    for(db::Net* net : database.nets) {
-        cout << 
-        router.unroute_net(net);
-    }
-    router.print_demand();
+    // for(db::Net* net : router.net_queue) {
+    //     router.single_net_pattern(net);
+    // }
+    // router.print_demand();
+    // // router.write(output_path);
+    
+    // // router.unroute_net(net);
+    // // for(db::Net* net : database.nets) {
+    // //     cout << 
+    // //     router.unroute_net(net);
+    // // }
+
+    // router.break_ovfl();
+    // router.print_demand();
+    // // router.write(output_path);
+
+    gr::Point a(3,2);
+    gr::Point b(5,1);
+    cout << a-b<< endl;
+
+    db::Net* net = router.net_queue[687];
+    router.single_net_maze(net);
 
     return 0;
 }

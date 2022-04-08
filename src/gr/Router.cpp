@@ -249,6 +249,8 @@ bool Router::single_net_maze(db::Net* net){
 
     int x_1 = net->Pins[0]->pos_x;int y_1 = net->Pins[0]->pos_y;
     int x_2 = net->Pins[1]->pos_x;int y_2 = net->Pins[1]->pos_y;
+    cout << x_1 << " | " << y_1 << endl;
+    cout << x_2 << " | " << y_2 << "\n\n\n";
 
     // Prepare for queues
     auto solComp = [](const std::shared_ptr<Vertex> &lhs, const std::shared_ptr<Vertex> &rhs) {
@@ -263,24 +265,52 @@ bool Router::single_net_maze(db::Net* net){
 
     // Hadlock's 
     while (!solQueue.empty()) {
-        auto newVer = solQueue.top();
+        auto curVer = solQueue.top();
         solQueue.pop();
-        int x_v = newVer->pos.x_;
-        int y_v = newVer->pos.y_;
-        visited[newVer->pos.x_][newVer->pos.y_] = true;
+        int x_v = curVer->pos.x_;
+        int y_v = curVer->pos.y_;
+        int cost = curVer->cost;
+        visited[x_v][y_v] = true;
+
+        // if (x_v == 0 && y_v == 58) cout << curVer->prev->pos.x_ << " | " << curVer->prev->pos.y_ << endl;
 
         // reach a pin?
-        if (newVer->pos == dstPin) {
+        if (curVer->pos == dstPin) {
+            shared_ptr<Vertex> cur = curVer;
+            // break;
+            while (cur->prev != nullptr){
+                shared_ptr<Vertex> prev = cur->prev;
+                logger->info() << prev->pos.x_ << ", " << prev->pos.y_ << endl;
+                cur = prev;
+            }
             break;
         }
 
         // 4 directions
         for(int d = 0; d < 4; d++){
+            // Next vertex to visit | remember to calc the bound
             int x_off = Direction.x_off[d];
             int y_off = Direction.y_off[d];
-            int x_n = x_v + x_off;
-            int y_n = y_v + y_off;
-            cout << x_n << " | " << y_n << endl;
+            int x_new = x_v + x_off;
+            int y_new = y_v + y_off;
+            if (x_new < 0 || y_new < 0 || x_new >= gridX || y_new >= gridY) continue;
+            // logger->info() << x_new << " | " << y_new << endl;
+
+            // This direction has block
+            if (d == 0 && blkV[x_v][y_v]) continue;
+            if (d == 1 && blkV[x_v][y_v - 1]) continue;
+            if (d == 2 && blkH[x_v - 1][y_v]) continue;
+            if (d == 3 && blkH[x_v][y_v]) continue;
+
+            // If not visited
+            if (!visited[x_new][y_new]) {
+                Point newPin(x_new, y_new);
+                int new_cost = cost;
+
+                if ((newPin - dstPin) > (curVer->pos - dstPin)) new_cost++;
+                solQueue.push(std::make_shared<Vertex>(new_cost, newPin, curVer));
+                visited[x_new][y_new] = true;
+            }
         }
     }
 
