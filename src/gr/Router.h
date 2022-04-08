@@ -2,6 +2,7 @@
 #include "db/Database.h"
 
 #include "Rpath.h"
+#include "Vertex.h"
 
 namespace gr {
 
@@ -18,7 +19,7 @@ public:
     vector<vector<db::GCell*>> gcells;
 
     vector<Rpath> rpaths;
-    vector<vector<db::Point>> rpoints;
+    vector<vector<Point>> rpoints;
     vector<db::Net*> net_queue;
     vector<bool> net_rflag;
 
@@ -29,6 +30,7 @@ public:
     bool single_net_pattern(db::Net* net);
     bool single_net_maze(db::Net* net);
     bool unroute_net(db::Net* net);
+    bool break_ovfl();
     void print_demand();
     void run();
     void write(const string& output_path);

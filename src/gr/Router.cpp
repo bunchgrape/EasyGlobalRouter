@@ -32,26 +32,14 @@ Router::Router(db::Database* database_) :
 
     // Demand map | two directions
     // TODO: 
-    demH.resize(gridY, vector<int>(gridX));     // [Y][X]
-    demV.resize(gridX, vector<int>(gridY));     // [X][Y]
+    demH.resize(gridY, vector<int>(gridX));     // H [Y][X]
+    demV.resize(gridX, vector<int>(gridY));     // V [X][Y]
 
     // Route paths | net-wise
     rpaths.resize(database->nNets);
     rpoints.resize(database->nNets);
+    net_rflag.resize(database->nNets);
 
-    // for(int i = 0; i < grGrid.nx; i++){
-    //     for(int j = 0; j <  grGrid.ny; j++){
-    //        logger->info() << grGrid.gcells[i][j].X_cor;
-    //        logger->info() << grGrid.gcells[i][j].Y_cor;
-    //        logger->info() << grGrid.gcells[i][j].supplyH;
-    //        logger->info() << grGrid.gcells[i][j].supplyV << endl;
-    //     }
-    // }
-
-    //logger->info() << gridX << endl;
-    //logger->info() << gridY << endl;
-    //logger->info() << capH << endl;
-    //logger->info() << capV << endl;
 } //END MODULE
 
 //---------------------------------------------------------------------
@@ -160,20 +148,20 @@ bool Router::single_net_pattern(db::Net* net){
 
     // Writer format
     if (direction == true){
-        rpoints[idx].push_back(db::Point(x_l, y_s_1));
-        rpoints[idx].push_back(db::Point(bend, y_s_1));
-        rpoints[idx].push_back(db::Point(bend, y_s_2));
-        rpoints[idx].push_back(db::Point(x_h, y_s_2));
+        rpoints[idx].push_back(Point(x_l, y_s_1));
+        rpoints[idx].push_back(Point(bend, y_s_1));
+        rpoints[idx].push_back(Point(bend, y_s_2));
+        rpoints[idx].push_back(Point(x_h, y_s_2));
     } else{
-        rpoints[idx].push_back(db::Point(x_s_1, y_l));
-        rpoints[idx].push_back(db::Point(x_s_1, bend));
-        rpoints[idx].push_back(db::Point(x_s_2, bend));
-        rpoints[idx].push_back(db::Point(x_s_2, y_h));
+        rpoints[idx].push_back(Point(x_s_1, y_l));
+        rpoints[idx].push_back(Point(x_s_1, bend));
+        rpoints[idx].push_back(Point(x_s_2, bend));
+        rpoints[idx].push_back(Point(x_s_2, y_h));
     }
 
     // Update queues
     net_rflag[idx] = true;
-    net_queue.clear();
+    // net_queue.clear();
 
     return true;
 } //END MODULE
@@ -218,8 +206,84 @@ bool Router::unroute_net(db::Net* net){
 
 //---------------------------------------------------------------------
 
+bool Router::break_ovfl(){
+    net_queue.clear();
+    for(int i = 0; i < gridX; i++){
+        for(int j = 0; j < gridY; j++){
+            while(demV[i][j] > capV){            // X = H | Y = V
+                db::Net* net = database->nets[gcells[i][j]->netsY.back()];
+                unroute_net(net);
+                net_queue.push_back(net);
+                net_rflag[net->id()] = false;
+            }
+        }
+    }
+
+    for(int i = 0; i < gridX; i++){
+        for(int j = 0; j < gridY; j++){
+            while(demH[j][i] > capH){           // X = H | Y = V
+                db::Net* net = database->nets[gcells[i][j]->netsX.back()];
+                unroute_net(net);
+                net_queue.push_back(net);
+                net_rflag[net->id()] = false;
+            }
+        }
+    }
+
+    return true;
+} //END MODULE
+
+//---------------------------------------------------------------------
+
 bool Router::single_net_maze(db::Net* net){
-    
+    // Create maps
+    vector<vector<int>> visited(gridX, vector<int>(gridY, false));
+    vector<vector<int>> blkH(gridX, vector<int>(gridY, false));
+    vector<vector<int>> blkV(gridX, vector<int>(gridY, false));
+    for(int i = 0; i < gridX; i++){
+        for(int j = 0; j < gridY; j++){
+            blkH[i][j] = (demH[j][i] >= capH);
+            blkV[i][j] = (demV[i][j] >= capV);
+        }
+    }
+
+    int x_1 = net->Pins[0]->pos_x;int y_1 = net->Pins[0]->pos_y;
+    int x_2 = net->Pins[1]->pos_x;int y_2 = net->Pins[1]->pos_y;
+
+    // Prepare for queues
+    auto solComp = [](const std::shared_ptr<Vertex> &lhs, const std::shared_ptr<Vertex> &rhs) {
+        return rhs->cost < lhs->cost;
+    };
+    priority_queue<std::shared_ptr<Vertex>, vector<std::shared_ptr<Vertex>>, 
+                        decltype(solComp)> solQueue(solComp);
+
+    // Init vertex
+    solQueue.push(std::make_shared<Vertex>(0, Point(x_1, y_1), nullptr));
+    Point dstPin(x_2, y_2);
+
+    // Hadlock's 
+    while (!solQueue.empty()) {
+        auto newVer = solQueue.top();
+        solQueue.pop();
+        int x_v = newVer->pos.x_;
+        int y_v = newVer->pos.y_;
+        visited[newVer->pos.x_][newVer->pos.y_] = true;
+
+        // reach a pin?
+        if (newVer->pos == dstPin) {
+            break;
+        }
+
+        // 4 directions
+        for(int d = 0; d < 4; d++){
+            int x_off = Direction.x_off[d];
+            int y_off = Direction.y_off[d];
+            int x_n = x_v + x_off;
+            int y_n = y_v + y_off;
+            cout << x_n << " | " << y_n << endl;
+        }
+    }
+
     return true;
 } //END MODULE
 

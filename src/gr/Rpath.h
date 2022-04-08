@@ -3,6 +3,7 @@
 
 namespace gr {
 
+
 class Rpath {
 public:
     vector<db::GCell*> path;
