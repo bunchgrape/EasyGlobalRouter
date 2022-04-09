@@ -41,6 +41,9 @@ int main(int argc, char* argv[]) {
     
     utils::logger logger(result_dir, design);
 
+    logger.info() << left << setw(20) << "Ouput path: ";
+    logger.info() << output_path << endl;
+
     //-------------------------- read -----------------------------
     db::Database database;
     database.logger = &logger;
@@ -58,12 +61,26 @@ int main(int argc, char* argv[]) {
     // Solve OVFL
     router.break_ovfl();
 
-    // Maze Route
-    for(db::Net* net : router.net_queue) {
-        router.single_net_maze(net);
-    }
+    // // Maze Route
+    // for(db::Net* net : router.net_queue) {
+    //     router.single_net_maze(net);
+    // }
     // router.print_demand();
     router.write(output_path);
+
+    // Verify
+    string cmd = "../verifier/verify " + netFile + " " + output_path;
+    std::array<char, 128> buffer;
+    std::string log_out;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        std::string data(buffer.data());
+        log_out += data;
+    }
+    logger.info() << "\n\n\n" << log_out << endl;
 
     return 0;
 }

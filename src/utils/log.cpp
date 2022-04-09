@@ -82,6 +82,9 @@ logger::logger(const std::string& file_dir, const std::string& file_name){
     std::string stamp(buffer);
     std::string file_path_stamp = file_dir + stamp + "_" + file_name + ".log";
     fout = std::ofstream(file_path_stamp);
+    
+    fout << std::left << std::setw(20) << "Log file: ";
+    fout << file_path_stamp << std::endl;
 }
 
 logger::~logger(){

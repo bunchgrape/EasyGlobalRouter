@@ -22,6 +22,9 @@ public:
     vector<vector<Point>> rpoints;
     vector<db::Net*> net_queue;
     vector<bool> net_rflag;
+    vector<int> net_ovfl;
+    priority_queue<std::shared_ptr<net_prior>> net_queue_ovfl;
+    
 
 public:
     Router(db::Database* database_);

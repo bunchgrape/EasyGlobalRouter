@@ -48,4 +48,13 @@ public:
                 cost(c), pos(v), prev(p), direction(d) {}
 };
 
+class net_prior {
+public:
+    int cost;
+    int idx;
+
+    net_prior(int c, int i) : 
+                cost(c), idx(i){}
+};
+
 }

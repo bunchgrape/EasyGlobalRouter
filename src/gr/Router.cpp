@@ -39,6 +39,7 @@ Router::Router(db::Database* database_) :
     rpaths.resize(database->nNets);
     rpoints.resize(database->nNets);
     net_rflag.resize(database->nNets);
+    net_ovfl.resize(database->nNets, 0);
 
 } //END MODULE
 
@@ -208,6 +209,37 @@ bool Router::unroute_net(db::Net* net){
 // TODO: thres blk
 
 bool Router::break_ovfl(){
+    // Calc ovfl
+    for(int i = 0; i < gridX; i++){
+        for(int j = 0; j < gridY; j++){
+            if (demV[i][j] > capV){            // X = H | Y = V
+                int ovfl = demV[i][j] - capV;
+                for(int idx : gcells[i][j]->netsY){
+                    net_ovfl[idx] += ovfl;
+                }
+            }
+        }
+    }
+    for(int i = 0; i < gridX; i++){
+        for(int j = 0; j < gridY; j++){
+            if (demH[j][i] > capH){           // X = H | Y = V
+                int ovfl = demH[j][i] - capH;
+                db::Net* net = database->nets[gcells[i][j]->netsX.back()];
+                for(int idx : gcells[i][j]->netsX){
+                    net_ovfl[idx] += ovfl;
+                }
+            }
+        }
+    }
+
+    // Prepare for queues
+    auto ovflComp = [](const std::shared_ptr<net_prior> &lhs, const std::shared_ptr<net_prior> &rhs) {
+        return rhs->cost > lhs->cost;
+    };
+    priority_queue<std::shared_ptr<net_prior>, vector<std::shared_ptr<net_prior>>, 
+                        decltype(ovflComp)> ovflQueue(ovflComp);
+
+    // #1. Unroute till no ovfl
     net_queue.clear();
     for(int i = 0; i < gridX; i++){
         for(int j = 0; j < gridY; j++){
@@ -216,10 +248,10 @@ bool Router::break_ovfl(){
                 unroute_net(net);
                 net_queue.push_back(net);
                 net_rflag[net->id()] = false;
+                ovflQueue.push(std::make_shared<net_prior>(net_ovfl[net->id()], net->id()));
             }
         }
     }
-
     for(int i = 0; i < gridX; i++){
         for(int j = 0; j < gridY; j++){
             while(demH[j][i] > capH){           // X = H | Y = V
@@ -227,8 +259,26 @@ bool Router::break_ovfl(){
                 unroute_net(net);
                 net_queue.push_back(net);
                 net_rflag[net->id()] = false;
+                ovflQueue.push(std::make_shared<net_prior>(net_ovfl[net->id()], net->id()));
             }
         }
+    }
+
+    // // #2. Unroute all ovfl nets
+    // for(db::Net* net : database->nets) {
+    //     if (net_ovfl[net->id()] > 0){
+    //         unroute_net(net);
+    //         ovflQueue.push(std::make_shared<net_prior>(net_ovfl[net->id()], net->id()));
+    //     }
+    // }
+
+    // Maze route nets with resp. # of ovfl
+    while (!ovflQueue.empty()) {
+        auto net_prior = ovflQueue.top();
+        ovflQueue.pop();
+        db::Net* net = database->nets[net_prior->idx];
+        // cout << net_prior->cost << endl;
+        single_net_maze(net);
     }
 
     return true;
