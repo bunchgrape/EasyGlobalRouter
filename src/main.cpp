@@ -51,33 +51,19 @@ int main(int argc, char* argv[]) {
     gr::Router router(&database);
 
     // Pattern Route
-    // db::Net* net = router.net_queue[1];
-    // router.single_net_pattern(net);
-
     for(db::Net* net : router.net_queue) {
         router.single_net_pattern(net);
     }
-    // router.print_demand();
-
-    // router.write(output_path);
-    
-    // router.unroute_net(net);
-    // for(db::Net* net : database.nets) {
-    //     cout << 
-    //     router.unroute_net(net);
-    // }
 
     // Solve OVFL
     router.break_ovfl();
-    // router.print_demand();
-    // router.write(output_path);
 
     // Maze Route
-    // db::Net* net = router.net_queue[687];
-    // router.single_net_maze(net);
     for(db::Net* net : router.net_queue) {
         router.single_net_maze(net);
     }
+    // router.print_demand();
+    router.write(output_path);
 
     return 0;
 }

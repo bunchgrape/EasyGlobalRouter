@@ -42,7 +42,10 @@ public:
     Point pos;
     std::shared_ptr<Vertex> prev;
 
-    Vertex(int c, Point v, const std::shared_ptr<Vertex> &p) : cost(c), pos(v), prev(p) {}
+    int direction;
+
+    Vertex(int c, Point v, const std::shared_ptr<Vertex> &p, int d) : 
+                cost(c), pos(v), prev(p), direction(d) {}
 };
 
 }

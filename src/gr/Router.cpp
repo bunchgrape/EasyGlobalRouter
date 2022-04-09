@@ -64,7 +64,7 @@ bool Router::single_net_pattern(db::Net* net){
     int min_cost = INT_MAX;
     int cost;
     bool direction;     // true vertival | false horizontal
-    int bend;       // Bending point
+    int bend;           // Bending point
 
     // Vertical line
     for (int i = x_l; i <= x_h; i++){
@@ -199,12 +199,13 @@ bool Router::unroute_net(db::Net* net){
     }
 
     rpaths[idx].clear();
-    rpoints[idx].clear();
+    // rpoints[idx].clear();    //FIXME: clear ovfl path
     
     return true;
 } //END MODULE
 
 //---------------------------------------------------------------------
+// TODO: thres blk
 
 bool Router::break_ovfl(){
     net_queue.clear();
@@ -234,8 +235,10 @@ bool Router::break_ovfl(){
 } //END MODULE
 
 //---------------------------------------------------------------------
+// TODO: thres blk
 
 bool Router::single_net_maze(db::Net* net){
+    // logger->info() << net->name() << ' ' << net_queue.size() << " nets left\n";
     // Create maps
     vector<vector<int>> visited(gridX, vector<int>(gridY, false));
     vector<vector<int>> blkH(gridX, vector<int>(gridY, false));
@@ -246,11 +249,8 @@ bool Router::single_net_maze(db::Net* net){
             blkV[i][j] = (demV[i][j] >= capV);
         }
     }
-
     int x_1 = net->Pins[0]->pos_x;int y_1 = net->Pins[0]->pos_y;
     int x_2 = net->Pins[1]->pos_x;int y_2 = net->Pins[1]->pos_y;
-    cout << x_1 << " | " << y_1 << endl;
-    cout << x_2 << " | " << y_2 << "\n\n\n";
 
     // Prepare for queues
     auto solComp = [](const std::shared_ptr<Vertex> &lhs, const std::shared_ptr<Vertex> &rhs) {
@@ -260,8 +260,10 @@ bool Router::single_net_maze(db::Net* net){
                         decltype(solComp)> solQueue(solComp);
 
     // Init vertex
-    solQueue.push(std::make_shared<Vertex>(0, Point(x_1, y_1), nullptr));
+    solQueue.push(std::make_shared<Vertex>(0, Point(x_1, y_1), nullptr, -1));
     Point dstPin(x_2, y_2);
+    Point srcPin(x_1, y_1);
+    std::shared_ptr<Vertex> dstVer = std::make_shared<Vertex>(0, Point(x_2, y_2), nullptr, -1);
 
     // Hadlock's 
     while (!solQueue.empty()) {
@@ -272,17 +274,9 @@ bool Router::single_net_maze(db::Net* net){
         int cost = curVer->cost;
         visited[x_v][y_v] = true;
 
-        // if (x_v == 0 && y_v == 58) cout << curVer->prev->pos.x_ << " | " << curVer->prev->pos.y_ << endl;
-
         // reach a pin?
         if (curVer->pos == dstPin) {
-            shared_ptr<Vertex> cur = curVer;
-            // break;
-            while (cur->prev != nullptr){
-                shared_ptr<Vertex> prev = cur->prev;
-                logger->info() << prev->pos.x_ << ", " << prev->pos.y_ << endl;
-                cur = prev;
-            }
+            dstVer = curVer;
             break;
         }
 
@@ -294,7 +288,6 @@ bool Router::single_net_maze(db::Net* net){
             int x_new = x_v + x_off;
             int y_new = y_v + y_off;
             if (x_new < 0 || y_new < 0 || x_new >= gridX || y_new >= gridY) continue;
-            // logger->info() << x_new << " | " << y_new << endl;
 
             // This direction has block
             if (d == 0 && blkV[x_v][y_v]) continue;
@@ -308,11 +301,36 @@ bool Router::single_net_maze(db::Net* net){
                 int new_cost = cost;
 
                 if ((newPin - dstPin) > (curVer->pos - dstPin)) new_cost++;
-                solQueue.push(std::make_shared<Vertex>(new_cost, newPin, curVer));
+                solQueue.push(std::make_shared<Vertex>(new_cost, newPin, curVer, d));
                 visited[x_new][y_new] = true;
             }
         }
     }
+
+    int idx = net->id();
+    if (dstVer->prev == nullptr) return false;
+    rpoints[idx].clear();
+
+    shared_ptr<Vertex> curVer = dstVer;
+    rpoints[idx].push_back(curVer->pos);    // Start point
+    int cur_dir;
+    int next_dir = curVer->direction;
+    while (curVer->prev != nullptr){
+        shared_ptr<Vertex> preVer = curVer->prev;
+
+        cur_dir = curVer->direction;
+        if (cur_dir == 0) demV[preVer->pos.x_][preVer->pos.y_] += 1;
+        if (cur_dir == 1) demV[curVer->pos.x_][curVer->pos.y_] += 1;
+        if (cur_dir == 2) demH[curVer->pos.y_][curVer->pos.x_] += 1;
+        if (cur_dir == 3) demH[preVer->pos.y_][preVer->pos.x_] += 1;
+
+        if (cur_dir != next_dir) rpoints[idx].push_back(curVer->pos);    // Bend point
+
+        next_dir = cur_dir;
+        curVer = preVer;
+    }
+
+    if (!(srcPin == rpoints[idx].back()))  rpoints[idx].push_back(srcPin);
 
     return true;
 } //END MODULE
