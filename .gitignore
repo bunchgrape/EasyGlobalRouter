@@ -7,7 +7,6 @@ bin/
 results/
 verifier/
 testcase/
-result*
 
 # vscode
 .vscode/
