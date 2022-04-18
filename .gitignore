@@ -1,7 +1,7 @@
 
 # Pre
 build/
-bin/
+# bin/
 
 # output/
 results/
