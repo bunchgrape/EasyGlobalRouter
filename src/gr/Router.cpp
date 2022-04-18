@@ -169,6 +169,16 @@ bool Router::single_net_pattern(db::Net* net){
 
 //---------------------------------------------------------------------
 
+bool Router::patter_route(){
+    log() << "Start pattern route\n";
+    for(db::Net* net : net_queue) {
+        single_net_pattern(net);
+    }
+    return true;
+} //END MODULE
+
+//---------------------------------------------------------------------
+
 bool Router::unroute_net(db::Net* net){
     int idx = net->id();
     net_rflag[idx] = false;
@@ -209,6 +219,7 @@ bool Router::unroute_net(db::Net* net){
 // TODO: thres blk
 
 bool Router::break_ovfl(){
+    log() << "Start maze route\n";
     // Calc ovfl
     for(int i = 0; i < gridX; i++){
         for(int j = 0; j < gridY; j++){

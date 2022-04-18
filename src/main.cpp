@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     
     log() << "-----------start-------------" << std::endl;
 
-    //-------------------------- input ---------------------------
+    //-------------------------- Input ---------------------------
     string netFile      = string(argv[1]);
     string output_path      = string(argv[2]);
 
@@ -27,9 +27,7 @@ int main(int argc, char* argv[]) {
     std::string prefix = preprefix.substr(0,preprefix.find_last_of('.'));
     std::string design = prefix.substr(prefix.find_last_of('/')+1);
 
-    utils::timer runtime;
-
-    //------------------------ setup log file --------------------- 
+    //------------------------ Setup log file --------------------- 
     const std::string& result = "results";
     const std::string& result_dir = "../" + result + "/";
 
@@ -44,31 +42,28 @@ int main(int argc, char* argv[]) {
     logger.info() << left << setw(20) << "Ouput path: ";
     logger.info() << output_path << endl;
 
-    //-------------------------- read -----------------------------
+    //-------------------------- Read -----------------------------
     db::Database database;
     database.logger = &logger;
     database.designName = design;
     database.read(netFile);
 
-    //-------------------------- load -----------------------------
+    //-------------------------- Run -----------------------------
+    utils::timer runtime;
+
     gr::Router router(&database);
 
     // Pattern Route
-    for(db::Net* net : router.net_queue) {
-        router.single_net_pattern(net);
-    }
+    router.patter_route();
 
-    // Solve OVFL
+    // Maze Route
     router.break_ovfl();
+    double run_time = runtime.elapsed();
+    log() << "========== Execution time: " << run_time << " s ==========\n\n";
 
-    // // Maze Route
-    // for(db::Net* net : router.net_queue) {
-    //     router.single_net_maze(net);
-    // }
-    // router.print_demand();
     router.write(output_path);
-
-    // Verify
+    //-------------------------- Verify -----------------------------
+    // Verify to log
     string cmd = "../verifier/verify " + netFile + " " + output_path;
     std::array<char, 128> buffer;
     std::string log_out;
@@ -80,7 +75,10 @@ int main(int argc, char* argv[]) {
         std::string data(buffer.data());
         log_out += data;
     }
+
     logger.info() << "\n\n\n" << log_out << endl;
+    log() << "Results logged to dir " << result_dir << endl;
+    log() << "Output written to " << output_path << endl << endl;
 
     return 0;
 }

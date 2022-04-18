@@ -2,10 +2,12 @@
 # Pre
 build/
 bin/
-output/
+
+# output/
 results/
 verifier/
 testcase/
+result*
 
 # vscode
 .vscode/

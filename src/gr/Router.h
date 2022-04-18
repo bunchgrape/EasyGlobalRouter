@@ -31,6 +31,7 @@ public:
     utils::logger* logger;
 
     bool single_net_pattern(db::Net* net);
+    bool patter_route();
     bool single_net_maze(db::Net* net);
     bool unroute_net(db::Net* net);
     bool break_ovfl();
